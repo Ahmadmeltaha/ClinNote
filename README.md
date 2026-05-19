@@ -10,9 +10,9 @@ Built as the Spring 2025 capstone project at **Al-Hussein Technical University**
 
 | Name | Role |
 |---|---|
-| **Ahmad Jaber** (22110362) | AI pipeline, FastAPI server, ML model |
-| **Daliah Qadri** (22210028) | Anomaly detection, data preprocessing |
-| **Ahmad Meltaha** (22110360) | Web application (frontend + backend), database, deployment |
+| **Ahmad Jaber** | AI pipeline, FastAPI server, ML model |
+| **Daliah Qadri** | Anomaly detection, data preprocessing |
+| **Ahmad Meltaha** | Web application (frontend + backend), database, deployment |
 
 Supervisor: **Dr. Rami Al Ouran**
 
