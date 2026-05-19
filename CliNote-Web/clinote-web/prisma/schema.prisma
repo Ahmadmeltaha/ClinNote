@@ -1,0 +1,237 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  patients Patient[]
+  reports  Report[]
+}
+
+model Patient {
+  id                String    @id @default(cuid())
+  mrn               String    @unique
+  firstName         String
+  lastName          String
+  dateOfBirth       DateTime
+  gender            Gender
+  admissionDate     DateTime
+  dischargeDate     DateTime?
+  chiefComplaint    String?
+  attendingDoctor   User      @relation(fields: [attendingDoctorId], references: [id])
+  attendingDoctorId String
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  aiHadmId    Int? @unique
+  aiSubjectId Int?
+
+  problems      Problem[]
+  allergies     Allergy[]
+  medications   Medication[]
+  labResults    LabResult[]
+  vitalSigns    VitalSign[]
+  clinicalNotes ClinicalNote[]
+  aiSummaries   AISummary[]
+  alerts        Alert[]
+  reports       Report[]
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+model Problem {
+  id        String        @id @default(cuid())
+  patient   Patient       @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  patientId String
+  name      String
+  icdCode   String?
+  status    ProblemStatus @default(ACTIVE)
+  onsetDate DateTime?
+  createdAt DateTime      @default(now())
+}
+
+enum ProblemStatus {
+  ACTIVE
+  RESOLVED
+  CHRONIC
+}
+
+model Allergy {
+  id        String   @id @default(cuid())
+  patient   Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  patientId String
+  allergen  String
+  reaction  String?
+  severity  Severity @default(MODERATE)
+  createdAt DateTime @default(now())
+}
+
+enum Severity {
+  MILD
+  MODERATE
+  SEVERE
+}
+
+model Medication {
+  id        String    @id @default(cuid())
+  patient   Patient   @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  patientId String
+  name      String
+  dose      String?
+  route     String?
+  frequency String?
+  startDate DateTime  @default(now())
+  endDate   DateTime?
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+}
+
+model LabResult {
+  id           String   @id @default(cuid())
+  patient      Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  patientId    String
+  testName     String
+  value        Float
+  unit         String
+  refRangeLow  Float?
+  refRangeHigh Float?
+  flag         LabFlag  @default(NORMAL)
+  collectedAt  DateTime @default(now())
+  createdAt    DateTime @default(now())
+}
+
+enum LabFlag {
+  NORMAL
+  LOW
+  HIGH
+  CRITICAL_LOW
+  CRITICAL_HIGH
+}
+
+model VitalSign {
+  id              String   @id @default(cuid())
+  patient         Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  patientId       String
+  temperature     Float?
+  heartRate       Int?
+  bpSystolic      Int?
+  bpDiastolic     Int?
+  respiratoryRate Int?
+  spO2            Float?
+  recordedAt      DateTime @default(now())
+  createdAt       DateTime @default(now())
+}
+
+model ClinicalNote {
+  id        String   @id @default(cuid())
+  patient   Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  patientId String
+  noteType  NoteType @default(PROGRESS)
+  content   String
+  author    String
+  noteDate  DateTime @default(now())
+  createdAt DateTime @default(now())
+}
+
+enum NoteType {
+  ADMISSION
+  PROGRESS
+  DISCHARGE
+  CONSULTATION
+  PROCEDURE
+}
+
+model AISummary {
+  id                 String      @id @default(cuid())
+  patient            Patient     @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  patientId          String
+  summaryType        SummaryType @default(COMPREHENSIVE)
+  content            String
+  keyFindings        Json?
+  mortalityRisk      Float?
+  riskLevel          RiskLevel?
+  confidenceInterval Json?
+  modelUsed          String?
+  generatedAt        DateTime    @default(now())
+  createdAt          DateTime    @default(now())
+}
+
+enum SummaryType {
+  COMPREHENSIVE
+  DISCHARGE
+  BRIEF
+}
+
+enum RiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model Alert {
+  id         String        @id @default(cuid())
+  patient    Patient       @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  patientId  String
+  alertType  AlertType
+  priority   AlertPriority
+  title      String
+  message    String
+  source     String?
+  sourceData Json?
+  isResolved Boolean       @default(false)
+  resolvedAt DateTime?
+  resolvedBy String?
+  createdAt  DateTime      @default(now())
+}
+
+enum AlertType {
+  LAB_ABNORMAL
+  VITAL_ABNORMAL
+  DRUG_INTERACTION
+  ALLERGY_CONFLICT
+  DISCREPANCY
+  TREND
+}
+
+enum AlertPriority {
+  CRITICAL
+  WARNING
+  INFO
+}
+
+model Report {
+  id         String       @id @default(cuid())
+  patient    Patient      @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  patientId  String
+  author     User         @relation(fields: [authorId], references: [id])
+  authorId   String
+  title      String
+  content    String
+  originalAI String?
+  status     ReportStatus @default(DRAFT)
+  approvedAt DateTime?
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+}
+
+enum ReportStatus {
+  DRAFT
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+}

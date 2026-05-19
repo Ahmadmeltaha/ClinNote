@@ -1,0 +1,37 @@
+{
+  "subject_id": 99999,
+  "hadm_id": 111111,
+  "generated_at": "2026-04-15T10:00:00",
+  "demographics": { "age": 45, "gender": "F" },
+  "admission_info": {
+    "admittime": "2026-04-14T09:00:00",
+    "dischtime": "2026-04-15T11:00:00",
+    "los_days": 1.1
+  },
+  "mortality_risk": {
+    "probability": 0.05,
+    "risk_level": "LOW"
+  },
+  "note_summary": "45-year-old female admitted for elective laparoscopic cholecystectomy. Surgery uneventful, no intraoperative complications. Vital signs stable throughout post-operative course. Pain well-controlled with PRN oral analgesics. Tolerating regular diet. No signs of infection or bleeding.\n\nPlan: discharge home today with surgical follow-up in 2 weeks. Patient educated on wound care, activity restrictions, and warning signs requiring return.",
+  "lab_anomalies": [
+    {
+      "label": "Hemoglobin",
+      "value": 11.5,
+      "unit": "g/dL",
+      "ref_range": "12.0-17.0",
+      "flag": "LOW",
+      "severity": "warning"
+    }
+  ],
+  "vital_anomalies": [],
+  "vital_trends": {
+    "Heart Rate": { "trend": "stable", "slope": 0.1, "r2": 0.12 }
+  },
+  "alerts": [
+    {
+      "type": "lab_critical",
+      "severity": "warning",
+      "message": "Hemoglobin 11.5 g/dL — mild post-operative anemia. Consider iron studies if persistent on follow-up."
+    }
+  ]
+}

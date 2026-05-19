@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ClinNote — Test UI</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f0f4f8; margin: 0; padding: 20px; }
+    h1 { color: #1a3c5e; }
+    .banner { background: #fff3cd; border: 1px solid #ffc107; padding: 10px 15px;
+              border-radius: 6px; margin-bottom: 20px; font-size: 13px; }
+    .cards { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 30px; }
+    .card { background: white; border-radius: 10px; padding: 20px; flex: 1;
+            min-width: 250px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .card h2 { margin-top: 0; }
+    .card-1 { border-top: 4px solid #28a745; }
+    .card-2 { border-top: 4px solid #007bff; }
+    .card-3 { border-top: 4px solid #dc3545; }
+    input, select { width: 100%; padding: 8px; margin: 6px 0 12px;
+                    border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+    button { background: #1a3c5e; color: white; padding: 10px 20px;
+             border: none; border-radius: 5px; cursor: pointer; width: 100%; font-size: 14px; }
+    button:hover { background: #2a5c8e; }
+    .patient-table { width: 100%; border-collapse: collapse; background: white;
+                     border-radius: 8px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
+    .patient-table th { background: #1a3c5e; color: white; padding: 10px 14px; text-align: left; }
+    .patient-table td { padding: 9px 14px; border-bottom: 1px solid #eee; }
+    .patient-table tr:hover td { background: #f0f7ff; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 10px;
+             font-size: 12px; font-weight: bold; }
+    .HIGH { background: #fde8e8; color: #c0392b; }
+    .MEDIUM { background: #fff3e0; color: #d35400; }
+    .LOW { background: #e8f8f0; color: #27ae60; }
+    a { color: #007bff; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .search-box { margin-bottom: 15px; }
+    .search-box input { max-width: 300px; display: inline-block; width: auto; }
+  </style>
+</head>
+<body>
+  <h1>🏥 ClinNote — Test UI <small style="font-size:14px;color:#888">(Temporary)</small></h1>
+  <div class="banner">
+    ⚠️ This is a temporary test interface. Delete <code>test_ui/</code> after Meltaha integrates the real frontend.
+    API running at <strong>http://localhost:5000</strong>
+  </div>
+
+  <!-- 3 Case Cards -->
+  <div class="cards">
+
+    <!-- Case 1: View existing patient -->
+    <div class="card card-1">
+      <h2>👁 Case 1 — View Patient</h2>
+      <p>Load dashboard for an existing patient (no new data).</p>
+      <form action="" method="get" id="case1-form">
+        <label>Admission ID (hadm_id)</label>
+        <input type="number" id="case1-hadm" name="hadm_id" placeholder="e.g. 22595853" required>
+        <button type="submit" onclick="goCase1()">View Dashboard</button>
+      </form>
+      <script>
+        function goCase1() {
+          event.preventDefault();
+          const hid = document.getElementById('case1-hadm').value;
+          if (hid) window.location.href = '/patient/' + hid;
+        }
+      </script>
+    </div>
+
+    <!-- Case 2: Update existing patient -->
+    <div class="card card-2">
+      <h2>🔄 Case 2 — Update Patient</h2>
+      <p>View dashboard then add new data. Click a patient below to open their dashboard with the update form.</p>
+      <label>Admission ID (hadm_id)</label>
+      <input type="number" id="case2-hadm" placeholder="e.g. 22595853">
+      <button onclick="goCase2()">Open Dashboard + Update</button>
+      <script>
+        function goCase2() {
+          const hid = document.getElementById('case2-hadm').value;
+          if (hid) window.location.href = '/patient/' + hid + '?show_update=1';
+        }
+      </script>
+    </div>
+
+    <!-- Case 3: New patient -->
+    <div class="card card-3">
+      <h2>➕ Case 3 — New Patient</h2>
+      <p>Enter demographics and upload data for a brand new patient.</p>
+      <a href="/patient/new"><button>New Patient Form</button></a>
+    </div>
+
+  </div>
+
+  <!-- Patient list table -->
+  <h2>All Patients ({{ patients|length }} total)</h2>
+  <div class="search-box">
+    <input type="text" id="search" placeholder="Filter by subject ID..." oninput="filterTable()">
+  </div>
+
+  {% if patients %}
+  <table class="patient-table" id="ptable">
+    <thead>
+      <tr>
+        <th>Subject ID</th>
+        <th>Age</th>
+        <th>Gender</th>
+        <th>Admissions</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in patients %}
+      <tr>
+        <td><strong>{{ p.subject_id }}</strong></td>
+        <td>{{ p.age or '—' }}</td>
+        <td>{{ p.gender or '—' }}</td>
+        <td>
+          {% for adm in p.admissions %}
+          <span class="badge {{ adm.risk_level or 'LOW' }}">
+            {{ adm.hadm_id }} — {{ adm.risk_level or '?' }} ({{ "%.0f"|format((adm.probability or 0) * 100) }}%)
+          </span><br>
+          {% endfor %}
+        </td>
+        <td>
+          {% for adm in p.admissions %}
+          <a href="/patient/{{ adm.hadm_id }}">View</a> |
+          <a href="/patient/{{ adm.hadm_id }}?show_update=1">Update</a><br>
+          {% endfor %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p style="color:#888">No patients found. Make sure the API is running and outputs/summaries/ contains JSON files.</p>
+  {% endif %}
+
+  <script>
+    function filterTable() {
+      const q = document.getElementById('search').value.toLowerCase();
+      document.querySelectorAll('#ptable tbody tr').forEach(row => {
+        row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+      });
+    }
+  </script>
+</body>
+</html>

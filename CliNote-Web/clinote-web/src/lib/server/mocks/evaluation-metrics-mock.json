@@ -1,0 +1,26 @@
+{
+  "mortality_prediction": {
+    "auroc": 0.8641,
+    "auprc": 0.7823,
+    "accuracy": 0.821,
+    "sensitivity": 0.792,
+    "specificity": 0.834,
+    "f1_score": 0.768
+  },
+  "ablation": {
+    "text_only": 0.7321,
+    "labs_only": 0.7892,
+    "vitals_only": 0.7654,
+    "full_fusion": 0.8641
+  },
+  "anomaly_detection": {
+    "lab": { "precision": 0.91, "recall": 0.87 },
+    "vital": { "precision": 0.88, "recall": 0.84 }
+  },
+  "training": {
+    "epochs": 25,
+    "best_epoch": 19,
+    "optimizer": "AdamW",
+    "learning_rate": 0.0002
+  }
+}

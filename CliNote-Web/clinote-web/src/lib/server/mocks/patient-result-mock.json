@@ -1,0 +1,108 @@
+{
+  "subject_id": 12345,
+  "hadm_id": 678901,
+  "generated_at": "2026-04-15T14:30:00",
+  "demographics": { "age": 67, "gender": "M" },
+  "admission_info": {
+    "admittime": "2026-04-10T08:15:00",
+    "dischtime": "2026-04-15T14:00:00",
+    "los_days": 5.2
+  },
+  "mortality_risk": {
+    "probability": 0.42,
+    "risk_level": "HIGH"
+  },
+  "note_summary": "67-year-old male with history of CKD stage 3 and hypertension presented with fever (T 38.4°C), tachycardia (HR 118), and altered mental status. Blood cultures positive for E. coli, consistent with urosepsis. Acute kidney injury on chronic kidney disease — creatinine rose from baseline 1.4 to 3.8 mg/dL. WBC 18.4 K/uL with left shift.\n\nStarted on broad-spectrum antibiotics (ceftriaxone 2g IV daily) and aggressive fluid resuscitation. Vasopressor support (norepinephrine) initiated for MAP < 65 mmHg. Trending: heart rate rising over the last 12 hours and MAP declining despite vasopressor support — concerning for septic shock progression. Recommend ICU transfer, source control evaluation, and lactate monitoring.",
+  "lab_anomalies": [
+    {
+      "label": "Creatinine",
+      "value": 3.8,
+      "unit": "mg/dL",
+      "ref_range": "0.6-1.2",
+      "flag": "HIGH",
+      "severity": "critical"
+    },
+    {
+      "label": "WBC",
+      "value": 18.4,
+      "unit": "K/uL",
+      "ref_range": "4.5-11.0",
+      "flag": "HIGH",
+      "severity": "warning"
+    },
+    {
+      "label": "Potassium",
+      "value": 5.8,
+      "unit": "mmol/L",
+      "ref_range": "3.5-5.0",
+      "flag": "HIGH",
+      "severity": "warning"
+    },
+    {
+      "label": "Hemoglobin",
+      "value": 8.1,
+      "unit": "g/dL",
+      "ref_range": "12.0-17.0",
+      "flag": "LOW",
+      "severity": "warning"
+    }
+  ],
+  "vital_anomalies": [
+    {
+      "label": "Heart Rate",
+      "value": 118,
+      "unit": "bpm",
+      "threshold": 100,
+      "flag": "HIGH",
+      "severity": "warning"
+    },
+    {
+      "label": "MAP",
+      "value": 62,
+      "unit": "mmHg",
+      "threshold": 65,
+      "flag": "LOW",
+      "severity": "critical"
+    },
+    {
+      "label": "Respiratory Rate",
+      "value": 24,
+      "unit": "/min",
+      "threshold": 20,
+      "flag": "HIGH",
+      "severity": "warning"
+    }
+  ],
+  "vital_trends": {
+    "Heart Rate": { "trend": "increasing", "slope": 1.8, "r2": 0.84 },
+    "MAP": { "trend": "decreasing", "slope": -2.1, "r2": 0.76 },
+    "Respiratory Rate": { "trend": "increasing", "slope": 0.6, "r2": 0.61 }
+  },
+  "alerts": [
+    {
+      "type": "mortality_risk",
+      "severity": "critical",
+      "message": "High mortality risk (42%). Immediate clinical review and ICU consideration recommended."
+    },
+    {
+      "type": "lab_critical",
+      "severity": "critical",
+      "message": "Creatinine 3.8 mg/dL — severe AKI (KDIGO stage 2-3) on chronic kidney disease. Consider nephrology consult and renal replacement therapy planning."
+    },
+    {
+      "type": "vital_critical",
+      "severity": "critical",
+      "message": "MAP 62 mmHg — below target (≥65) despite vasopressor support. Evidence of septic shock progression."
+    },
+    {
+      "type": "lab_critical",
+      "severity": "warning",
+      "message": "Potassium 5.8 mmol/L — hyperkalemia. Continuous ECG monitoring; consider treatment (insulin/dextrose, calcium gluconate)."
+    },
+    {
+      "type": "trend_alert",
+      "severity": "warning",
+      "message": "Heart rate trending upward (slope 1.8 bpm/hr, R²=0.84). Possible compensatory tachycardia for declining MAP."
+    }
+  ]
+}

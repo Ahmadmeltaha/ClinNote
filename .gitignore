@@ -1,0 +1,113 @@
+# =============================================================
+# ClinNote — Top-level .gitignore (Web + AI mono-repo)
+#
+# CliNote-Web/clinote-web/ and ClinNote-AI/ClinNote/ each have
+# their own .gitignore files that apply to those subtrees.
+# This top-level file covers the workspace and adds safety nets
+# so secrets and patient data can NEVER leak — even if a sub-
+# gitignore is missing a rule.
+# =============================================================
+
+# -------------------------------------------------------------
+# Top-level workspace junk
+# -------------------------------------------------------------
+clinote-ai-venv/
+.claude/
+test-ui-fixed/
+ai-install.log
+*.log
+
+# -------------------------------------------------------------
+# Internal explanation / task / agent guide files
+# (project README.md files are kept on purpose)
+# -------------------------------------------------------------
+CLAUDE.md
+AGENTS.md
+ONBOARDING.md
+DALIAH_TASKS_GUIDE.md
+
+# -------------------------------------------------------------
+# SECRETS — never commit. Safety net regardless of sub-gitignores.
+# -------------------------------------------------------------
+.env
+.env.local
+.env.*.local
+.env.development.local
+.env.production.local
+.env.test.local
+
+# -------------------------------------------------------------
+# MIMIC-IV patient data and any AI-derived per-patient outputs.
+# This is the LEGAL line — pushing this violates the PhysioNet DUA.
+# Sub-gitignore already covers most of these, but be explicit.
+# -------------------------------------------------------------
+**/data/*.csv
+**/data/*.csv.gz
+**/outputs/patient_data/
+**/outputs/summaries/
+**/outputs/features/
+**/outputs/processed/
+**/outputs/models/
+**/outputs/logs/
+**/mimic-Data/
+**/Data/
+
+# -------------------------------------------------------------
+# OS / editor junk
+# -------------------------------------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# -------------------------------------------------------------
+# Python
+# -------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+env/
+
+# -------------------------------------------------------------
+# Node / Next.js
+# -------------------------------------------------------------
+node_modules/
+.next/
+out/
+.vercel/
+*.tsbuildinfo
+
+# -------------------------------------------------------------
+# Hugging Face / model weights (huge, regenerable)
+# -------------------------------------------------------------
+.cache/huggingface/
+*.h5
+*.hdf5
+*.pkl
+*.pickle
+*.pt
+*.pth
+*.ckpt
+*.bin
+*.safetensors
+
+# -------------------------------------------------------------
+# Generated test PDFs and backups
+# -------------------------------------------------------------
+*_BACKUP_*
+*_backup.*
+*.bak
+*.tmp

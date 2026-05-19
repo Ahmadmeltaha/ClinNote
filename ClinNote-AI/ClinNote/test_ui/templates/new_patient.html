@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ClinNote — New Patient</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f0f4f8; margin: 0; padding: 0; }
+    .navbar { background: #1a3c5e; color: white; padding: 12px 24px; display: flex; gap: 16px; align-items: center; }
+    .navbar a { color: #adc8e6; text-decoration: none; }
+    .content { padding: 24px; max-width: 750px; margin: auto; }
+    .banner { background: #fff3cd; border: 1px solid #ffc107; padding: 8px 14px;
+              border-radius: 6px; margin-bottom: 20px; font-size: 13px; }
+    .card { background: white; border-radius: 10px; padding: 22px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 20px; }
+    .card h3 { margin-top: 0; color: #1a3c5e; border-bottom: 1px solid #eee; padding-bottom: 8px; }
+    label { display: block; font-size: 13px; color: #555; margin-bottom: 3px; font-weight: 600; }
+    input[type=number], input[type=text], input[type=file], select, textarea {
+      width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;
+      font-size: 13px; margin-bottom: 14px; box-sizing: border-box; }
+    textarea { height: 120px; resize: vertical; }
+    .vital-row { display: flex; gap: 10px; margin-bottom: 8px; align-items: center; }
+    .vital-row select, .vital-row input { margin-bottom: 0; flex: 1; }
+    .btn-add { background: #28a745; color: white; padding: 6px 14px;
+               border: none; border-radius: 4px; cursor: pointer; font-size: 12px; }
+    .btn-submit { background: #dc3545; color: white; padding: 12px 28px;
+                  border: none; border-radius: 6px; cursor: pointer; font-size: 15px;
+                  width: 100%; font-weight: bold; }
+    .btn-submit:hover { background: #c0392b; }
+    .optional { color: #aaa; font-weight: normal; font-size: 12px; }
+    .labs-preview { margin-top: 8px; }
+    .labs-preview table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .labs-preview th { background: #f8f9fa; padding: 6px 8px; text-align: left; }
+    .labs-preview td { padding: 5px 8px; border-bottom: 1px solid #eee; }
+    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  </style>
+</head>
+<body>
+
+<div class="navbar">
+  <strong>🏥 ClinNote Test UI</strong>
+  <a href="/">← Patient List</a>
+</div>
+
+<div class="content">
+  <div class="banner">⚠️ Temporary test UI — delete after integration</div>
+  <h2 style="color:#1a3c5e">➕ New Patient — Full Pipeline</h2>
+
+  <form method="POST" action="/patient/new" enctype="multipart/form-data" id="new-form">
+
+    <!-- Demographics -->
+    <div class="card">
+      <h3>👤 Patient Demographics</h3>
+      <div class="row2">
+        <div>
+          <label>Age *</label>
+          <input type="number" name="age" min="0" max="120" placeholder="e.g. 65" required>
+        </div>
+        <div>
+          <label>Gender *</label>
+          <select name="gender" required>
+            <option value="M">Male (M)</option>
+            <option value="F">Female (F)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Clinical Notes -->
+    <div class="card">
+      <h3>📄 Clinical Notes <span class="optional">(optional)</span></h3>
+      <label>Paste discharge note or clinical text:</label>
+      <textarea name="note_text" placeholder="Paste clinical note text here (discharge summary, progress note, etc.)..."></textarea>
+    </div>
+
+    <!-- Lab Results — PDF -->
+    <div class="card">
+      <h3>🧪 Lab Results — PDF Upload <span class="optional">(optional)</span></h3>
+      <label>Upload lab report PDF:</label>
+      <input type="file" name="labs_pdf" id="labs_pdf" accept=".pdf" onchange="parsePDF(this)">
+      <div class="labs-preview" id="labs-preview"></div>
+    </div>
+
+    <!-- Vitals -->
+    <div class="card">
+      <h3>💓 Vital Signs <span class="optional">(optional)</span></h3>
+      <p style="font-size:13px;color:#666;margin-top:0">
+        Add one row per vital measurement. Only the vital name and value are needed.
+      </p>
+      <div id="vitals-rows">
+        <div class="vital-row">
+          <select name="vname0">
+            <option value="Heart Rate">Heart Rate (bpm)</option>
+            <option value="Systolic Blood Pressure">Systolic BP (mmHg)</option>
+            <option value="Diastolic Blood Pressure">Diastolic BP (mmHg)</option>
+            <option value="Mean Blood Pressure">Mean BP (mmHg)</option>
+            <option value="Respiratory Rate">Respiratory Rate (breaths/min)</option>
+            <option value="SpO2">SpO2 (%)</option>
+            <option value="Temperature Celsius">Temperature (°C)</option>
+          </select>
+          <input type="number" step="0.1" name="vval0" placeholder="Value">
+        </div>
+      </div>
+      <button type="button" class="btn-add" onclick="addVitalRow()">+ Add another vital</button>
+      <input type="hidden" name="vitals_json" id="vitals_json" value="[]">
+    </div>
+
+    <button type="submit" class="btn-submit" onclick="buildVitalsJson()">
+      🚀 Run Full Pipeline → Generate Dashboard
+    </button>
+    <p style="color:#888;font-size:12px;text-align:center;margin-top:8px">
+      This may take 30-60 seconds while the AI pipeline processes your data.
+    </p>
+  </form>
+</div>
+
+<script>
+let vitalCount = 1;
+function addVitalRow() {
+  const div = document.createElement('div');
+  div.className = 'vital-row';
+  div.innerHTML = `
+    <select name="vname${vitalCount}">
+      <option value="Heart Rate">Heart Rate (bpm)</option>
+      <option value="Systolic Blood Pressure">Systolic BP (mmHg)</option>
+      <option value="Diastolic Blood Pressure">Diastolic BP (mmHg)</option>
+      <option value="Mean Blood Pressure">Mean BP (mmHg)</option>
+      <option value="Respiratory Rate">Respiratory Rate (breaths/min)</option>
+      <option value="SpO2">SpO2 (%)</option>
+      <option value="Temperature Celsius">Temperature (°C)</option>
+    </select>
+    <input type="number" step="0.1" name="vval${vitalCount}" placeholder="Value">
+    <button type="button" onclick="this.parentElement.remove()"
+            style="color:#c0392b;background:none;border:none;cursor:pointer;font-size:18px">✕</button>
+  `;
+  document.getElementById('vitals-rows').appendChild(div);
+  vitalCount++;
+}
+
+function buildVitalsJson() {
+  const rows = document.querySelectorAll('.vital-row');
+  const vitals = [];
+  rows.forEach(row => {
+    const sel = row.querySelector('select');
+    const inp = row.querySelector('input[type=number]');
+    if (sel && inp && inp.value) {
+      vitals.push({ name: sel.value, value: parseFloat(inp.value) });
+    }
+  });
+  document.getElementById('vitals_json').value = JSON.stringify(vitals);
+}
+
+function parsePDF(input) {
+  const preview = document.getElementById('labs-preview');
+  preview.innerHTML = '<p style="color:#888;font-size:13px">⏳ Parsing PDF...</p>';
+  const fd = new FormData();
+  fd.append('lab_pdf', input.files[0]);
+  fetch('/api/parse-pdf-proxy', { method: 'POST', body: fd })
+    .then(r => r.json())
+    .then(data => {
+      if (!data.labs || data.labs.length === 0) {
+        preview.innerHTML = '<p style="color:#e67e22;font-size:13px">⚠️ No lab values extracted from PDF. The file will still be submitted and processed.</p>';
+        return;
+      }
+      let html = `<p style="color:#27ae60;font-size:13px">✅ Extracted ${data.labs.length} lab values:</p>
+      <table><tr><th>Lab Test</th><th>Value</th><th>Unit</th><th>Reference Range</th></tr>`;
+      data.labs.forEach(lab => {
+        const ref = (lab.ref_low !== null && lab.ref_high !== null)
+          ? `${lab.ref_low} – ${lab.ref_high}` : '—';
+        html += `<tr>
+          <td>${lab.name}</td>
+          <td><strong>${lab.value}</strong></td>
+          <td>${lab.unit || '—'}</td>
+          <td>${ref}</td>
+        </tr>`;
+      });
+      html += '</table>';
+      preview.innerHTML = html;
+    })
+    .catch(() => {
+      preview.innerHTML = '<p style="color:#c0392b;font-size:13px">❌ Could not parse PDF. It will still be submitted.</p>';
+    });
+}
+</script>
+</body>
+</html>

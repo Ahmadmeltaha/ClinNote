@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ClinNote — Patient {{ patient.hadm_id }}</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f0f4f8; margin: 0; padding: 0; }
+    .navbar { background: #1a3c5e; color: white; padding: 12px 24px;
+              display: flex; align-items: center; gap: 16px; }
+    .navbar a { color: #adc8e6; text-decoration: none; }
+    .navbar a:hover { color: white; }
+    .content { padding: 20px 24px; max-width: 1100px; margin: auto; }
+    .banner { background: #fff3cd; border: 1px solid #ffc107; padding: 8px 14px;
+              border-radius: 6px; margin-bottom: 16px; font-size: 13px; }
+    .update-banner { background: #d4edda; border: 1px solid #28a745; padding: 8px 14px;
+                     border-radius: 6px; margin-bottom: 16px; }
+    .header-row { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+    .badge { display: inline-block; padding: 6px 14px; border-radius: 20px;
+             font-size: 15px; font-weight: bold; }
+    .HIGH { background: #fde8e8; color: #c0392b; }
+    .MEDIUM { background: #fff3e0; color: #d35400; }
+    .LOW { background: #e8f8f0; color: #27ae60; }
+    .grid { display: grid; grid-template-columns: 260px 1fr; gap: 20px; margin-bottom: 20px; }
+    .card { background: white; border-radius: 10px; padding: 18px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    .card h3 { margin-top: 0; color: #1a3c5e; border-bottom: 1px solid #eee; padding-bottom: 8px; }
+    .gauge-wrap { display: flex; flex-direction: column; align-items: center; }
+    .gauge-label { font-size: 28px; font-weight: bold; margin-top: 8px; }
+    .alert-item { padding: 8px 12px; border-radius: 6px; margin-bottom: 8px; font-size: 13px; }
+    .CRITICAL { background: #fde8e8; border-left: 4px solid #c0392b; }
+    .WARNING  { background: #fff3e0; border-left: 4px solid #d35400; }
+    .INFO     { background: #e8f4fd; border-left: 4px solid #2980b9; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { background: #f8f9fa; color: #555; font-weight: 600;
+         padding: 8px 10px; text-align: left; border-bottom: 2px solid #dee2e6; }
+    td { padding: 7px 10px; border-bottom: 1px solid #f0f0f0; }
+    tr:hover td { background: #f8fbff; }
+    .status-high { color: #c0392b; font-weight: bold; }
+    .status-low  { color: #2980b9; font-weight: bold; }
+    .status-ok   { color: #27ae60; }
+    .summary-text { background: #f8fbff; border-left: 4px solid #1a3c5e;
+                    padding: 12px 16px; border-radius: 0 8px 8px 0;
+                    font-style: italic; line-height: 1.6; }
+    /* Update accordion */
+    .accordion { margin-top: 24px; }
+    .accordion-btn { background: #1a3c5e; color: white; width: 100%; padding: 12px 18px;
+                     border: none; border-radius: 8px; text-align: left; font-size: 15px;
+                     cursor: pointer; display: flex; justify-content: space-between; }
+    .accordion-btn:hover { background: #2a5c8e; }
+    .accordion-body { display: none; background: white; border: 1px solid #dee2e6;
+                      border-top: none; padding: 20px; border-radius: 0 0 8px 8px; }
+    .section { margin-bottom: 20px; }
+    .section h4 { color: #1a3c5e; margin-bottom: 8px; }
+    textarea { width: 100%; height: 100px; border: 1px solid #ccc; border-radius: 4px;
+               padding: 8px; font-size: 13px; box-sizing: border-box; }
+    input[type=file], input[type=number], input[type=text] {
+      border: 1px solid #ccc; border-radius: 4px; padding: 7px;
+      font-size: 13px; box-sizing: border-box; }
+    .vital-row { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; }
+    select { border: 1px solid #ccc; border-radius: 4px; padding: 7px; font-size: 13px; }
+    .btn-primary { background: #c0392b; color: white; padding: 10px 24px;
+                   border: none; border-radius: 5px; cursor: pointer; font-size: 14px; }
+    .btn-primary:hover { background: #e74c3c; }
+    .btn-add { background: #28a745; color: white; padding: 6px 14px;
+               border: none; border-radius: 4px; cursor: pointer; font-size: 12px; }
+    .diff-box { background: #e8f8f0; border: 1px solid #28a745; padding: 10px 14px;
+                border-radius: 6px; font-size: 13px; }
+    .labs-preview { margin-top: 10px; }
+    .labs-preview table { font-size: 12px; }
+  </style>
+</head>
+<body>
+
+<div class="navbar">
+  <strong>🏥 ClinNote Test UI</strong>
+  <a href="/">← Patient List</a>
+  <span style="margin-left:auto;font-size:12px;color:#aaa">hadm_id: {{ hadm_id }}</span>
+</div>
+
+<div class="content">
+  <div class="banner">⚠️ Temporary test UI — delete after integration</div>
+
+  {% if updated %}
+  <div class="update-banner">
+    ✅ Dashboard updated with new data.
+    {% if diff %}
+    Risk changed: <strong>{{ "%.1f"|format(diff.old_probability * 100) }}%</strong>
+    → <strong>{{ "%.1f"|format(diff.new_probability * 100) }}%</strong>
+    | Updated: {{ diff.modalities_updated | join(', ') }}
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <!-- Header -->
+  {% set mort = patient.predicted_mortality or patient.mortality_risk or {} %}
+  {% set risk = mort.risk_level or 'UNKNOWN' %}
+  {% set prob_val = mort.probability or 0.0 %}
+  <div class="header-row">
+    <h2 style="margin:0">Patient {{ patient.subject_id }} / Admission {{ patient.hadm_id }}</h2>
+    <div>Age: <strong>{{ (patient.demographics or {}).age or '—' }}</strong></div>
+    <div>Gender: <strong>{{ (patient.demographics or {}).gender or '—' }}</strong></div>
+    <span class="badge {{ risk }}">{{ risk }} RISK</span>
+  </div>
+
+  <!-- Main grid: gauge + alerts -->
+  <div class="grid">
+    <!-- Gauge -->
+    <div class="card gauge-wrap">
+      <h3>Mortality Risk</h3>
+      <canvas id="gaugeChart" width="200" height="200"></canvas>
+      <div class="gauge-label" style="color:
+        {% if risk == 'HIGH' %}#c0392b
+        {% elif risk == 'MEDIUM' %}#d35400
+        {% else %}#27ae60{% endif %}">
+        {{ "%.1f"|format(prob_val * 100) }}%
+      </div>
+      <div style="color:#888;font-size:13px">{{ risk }} risk</div>
+    </div>
+
+    <!-- Alerts -->
+    <div class="card">
+      <h3>Alerts ({{ (patient.alerts or []) | length }})</h3>
+      {% if patient.alerts %}
+        {% for alert in patient.alerts %}
+        {% set p = alert.priority or alert.severity or 'INFO' %}
+        <div class="alert-item {{ p | upper }}">
+          <strong>{{ p | upper }}</strong>
+          {% if alert.category %} | {{ alert.category }}{% endif %}
+          {% if alert.title %} — {{ alert.title }}{% endif %}<br>
+          <span style="color:#555">{{ alert.message or '' }}</span>
+        </div>
+        {% endfor %}
+      {% else %}
+        <p style="color:#888">No alerts generated.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Labs + Vitals -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
+    <div class="card">
+      <h3>Lab Results</h3>
+      {% set labs = patient.lab_summary %}
+      {% if labs and labs.top_abnormal %}
+      <table>
+        <tr><th>Lab</th><th>Value</th><th>Direction</th></tr>
+        {% for lab in labs.top_abnormal %}
+        <tr>
+          <td>{{ lab.label or lab.name or '?' }}</td>
+          <td>{{ lab.value or '?' }}</td>
+          <td class="{{ 'status-high' if lab.direction == 'HIGH' else 'status-low' }}">
+            {{ lab.direction or '?' }}
+          </td>
+        </tr>
+        {% endfor %}
+      </table>
+      <p style="font-size:12px;color:#888;margin-top:8px">
+        {{ labs.n_abnormal }} abnormal results
+      </p>
+      {% else %}
+      <p style="color:#888">No abnormal labs detected.</p>
+      {% endif %}
+    </div>
+
+    <div class="card">
+      <h3>Vital Signs</h3>
+      {% set vitals = patient.vital_summary %}
+      {% if vitals and vitals.alerts %}
+      <table>
+        <tr><th>Vital</th><th>Value</th><th>Status</th></tr>
+        {% for v in vitals.alerts %}
+        <tr>
+          <td>{{ v.vital_name or '?' }}</td>
+          <td>{{ v.current_value or '?' }}</td>
+          <td class="{{ 'status-high' if v.status == 'HIGH' else ('status-low' if v.status == 'LOW' else 'status-ok') }}">
+            {{ v.status or '?' }}
+          </td>
+        </tr>
+        {% endfor %}
+      {% else %}
+      <p style="color:#888">No vital alerts.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Clinical Summary -->
+  <div class="card" style="margin-bottom:20px">
+    <h3>AI Clinical Summary</h3>
+    <div class="summary-text">{{ patient.clinical_summary or 'No summary available.' }}</div>
+  </div>
+
+  <!-- Case 2: Update accordion -->
+  <div class="accordion">
+    <button class="accordion-btn" onclick="toggleAccordion()" id="acc-btn">
+      🔄 Update with New Data
+      <span id="acc-arrow">▼</span>
+    </button>
+    <div class="accordion-body" id="acc-body">
+      <form method="POST" action="/patient/{{ hadm_id }}/update"
+            enctype="multipart/form-data" id="update-form">
+
+        <!-- Notes -->
+        <div class="section">
+          <h4>📄 Clinical Notes <small style="color:#888">(optional)</small></h4>
+          <textarea name="note_text" placeholder="Paste new clinical note here..."></textarea>
+        </div>
+
+        <!-- Labs PDF -->
+        <div class="section">
+          <h4>🧪 Lab Results — PDF Upload <small style="color:#888">(optional)</small></h4>
+          <input type="file" name="labs_pdf" id="labs_pdf" accept=".pdf"
+                 onchange="parsePDF(this)">
+          <div class="labs-preview" id="labs-preview"></div>
+        </div>
+
+        <!-- Vitals -->
+        <div class="section">
+          <h4>💓 Vital Signs <small style="color:#888">(optional — add one per row)</small></h4>
+          <div id="vitals-rows">
+            <div class="vital-row">
+              <select name="vname0">
+                <option value="Heart Rate">Heart Rate</option>
+                <option value="Systolic Blood Pressure">Systolic BP</option>
+                <option value="Diastolic Blood Pressure">Diastolic BP</option>
+                <option value="Mean Blood Pressure">Mean BP</option>
+                <option value="Respiratory Rate">Respiratory Rate</option>
+                <option value="SpO2">SpO2</option>
+                <option value="Temperature Celsius">Temperature (°C)</option>
+              </select>
+              <input type="number" step="0.1" name="vval0" placeholder="Value" style="width:120px">
+            </div>
+          </div>
+          <button type="button" class="btn-add" onclick="addVitalRow()">+ Add vital</button>
+          <input type="hidden" name="vitals_json" id="vitals_json" value="[]">
+        </div>
+
+        <button type="submit" class="btn-primary" onclick="buildVitalsJson()">
+          ⟳ Recalculate Dashboard
+        </button>
+      </form>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// Gauge chart
+const prob = {{ prob_val }};
+const risk = "{{ risk }}";
+const color = risk === 'HIGH' ? '#c0392b' : risk === 'MEDIUM' ? '#e67e22' : '#27ae60';
+new Chart(document.getElementById('gaugeChart'), {
+  type: 'doughnut',
+  data: {
+    datasets: [{
+      data: [prob * 100, 100 - prob * 100],
+      backgroundColor: [color, '#e9ecef'],
+      borderWidth: 0,
+    }]
+  },
+  options: {
+    cutout: '75%',
+    rotation: -90,
+    circumference: 180,
+    plugins: { legend: { display: false }, tooltip: { enabled: false } },
+  }
+});
+
+// Accordion
+function toggleAccordion() {
+  const body = document.getElementById('acc-body');
+  const arrow = document.getElementById('acc-arrow');
+  const open = body.style.display === 'block';
+  body.style.display = open ? 'none' : 'block';
+  arrow.textContent = open ? '▼' : '▲';
+}
+
+// Auto-open accordion if URL has ?show_update=1
+if (window.location.search.includes('show_update=1')) toggleAccordion();
+
+// Add vital row
+let vitalCount = 1;
+function addVitalRow() {
+  const div = document.createElement('div');
+  div.className = 'vital-row';
+  div.innerHTML = `
+    <select name="vname${vitalCount}">
+      <option value="Heart Rate">Heart Rate</option>
+      <option value="Systolic Blood Pressure">Systolic BP</option>
+      <option value="Diastolic Blood Pressure">Diastolic BP</option>
+      <option value="Mean Blood Pressure">Mean BP</option>
+      <option value="Respiratory Rate">Respiratory Rate</option>
+      <option value="SpO2">SpO2</option>
+      <option value="Temperature Celsius">Temperature (°C)</option>
+    </select>
+    <input type="number" step="0.1" name="vval${vitalCount}" placeholder="Value" style="width:120px">
+    <button type="button" onclick="this.parentElement.remove()" style="color:#c0392b;background:none;border:none;cursor:pointer;font-size:16px">✕</button>
+  `;
+  document.getElementById('vitals-rows').appendChild(div);
+  vitalCount++;
+}
+
+// Build vitals JSON before submit
+function buildVitalsJson() {
+  const rows = document.querySelectorAll('.vital-row');
+  const vitals = [];
+  rows.forEach(row => {
+    const sel = row.querySelector('select');
+    const inp = row.querySelector('input[type=number]');
+    if (sel && inp && inp.value) {
+      vitals.push({ name: sel.value, value: parseFloat(inp.value) });
+    }
+  });
+  document.getElementById('vitals_json').value = JSON.stringify(vitals);
+}
+
+// PDF parse preview
+function parsePDF(input) {
+  const preview = document.getElementById('labs-preview');
+  preview.innerHTML = '<p style="color:#888;font-size:13px">Parsing PDF...</p>';
+  const fd = new FormData();
+  fd.append('lab_pdf', input.files[0]);
+  fetch('/api/parse-pdf-proxy', { method: 'POST', body: fd })
+    .then(r => r.json())
+    .then(data => {
+      if (!data.labs || data.labs.length === 0) {
+        preview.innerHTML = '<p style="color:#c0392b;font-size:13px">Could not extract labs. Please verify values manually after submission.</p>';
+        return;
+      }
+      let html = `<p style="color:#27ae60;font-size:13px">✅ Extracted ${data.labs.length} lab values. Review below:</p>`;
+      html += '<table><tr><th>Lab</th><th>Value</th><th>Unit</th><th>Ref Low</th><th>Ref High</th></tr>';
+      data.labs.forEach(lab => {
+        html += `<tr>
+          <td>${lab.name}</td>
+          <td><input type="number" step="0.01" value="${lab.value}" style="width:80px" readonly></td>
+          <td>${lab.unit || ''}</td>
+          <td>${lab.ref_low || '—'}</td>
+          <td>${lab.ref_high || '—'}</td>
+        </tr>`;
+      });
+      html += '</table>';
+      preview.innerHTML = html;
+    })
+    .catch(() => {
+      preview.innerHTML = '<p style="color:#c0392b;font-size:13px">PDF parse request failed.</p>';
+    });
+}
+</script>
+</body>
+</html>
