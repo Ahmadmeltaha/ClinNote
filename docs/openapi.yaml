@@ -1,0 +1,81 @@
+openapi: 3.0.0
+info:
+  title: Cylinder Catalog API
+  version: 1.0.0
+  description: API for browsing gas cylinder inventory and stock status
+paths:
+  /api/v1/catalog:
+    get:
+      summary: Fetch cylinder catalog
+      description: Returns a complete list of gas cylinders with their specifications and current stock status
+      operationId: getCatalog
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful response with cylinder list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Cylinder'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Failed to fetch catalog
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Cylinder:
+      type: object
+      required:
+        - id
+        - name
+        - sizeKg
+        - gasType
+        - price
+        - imageUrl
+        - inStock
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for the cylinder
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Display name of the cylinder
+        sizeKg:
+          type: number
+          minimum: 0
+          exclusiveMinimum: true
+          description: Cylinder size in kilograms
+        gasType:
+          type: string
+          enum:
+            - butane
+            - propane
+          description: Type of gas contained in the cylinder
+        price:
+          type: number
+          minimum: 0
+          description: Price in local currency
+        imageUrl:
+          type: string
+          format: uri
+          description: URL to the cylinder product image
+        inStock:
+          type: boolean
+          description: Whether the cylinder is currently available for ordering

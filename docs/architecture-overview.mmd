@@ -1,0 +1,9 @@
+flowchart LR
+  FE["Frontend<br/>Flutter"]
+  FE --> API
+  API["API<br/>Hono"]
+  API --> g_catalog["catalog"]
+  g_catalog --> g_catalog_0["GET /api/v1/catalog"]
+  API --> SVC["Services"]
+  SVC --> DB[("Database<br/>PostgreSQL")]
+  DB --> TABLES["1 tables: cylinders"]
