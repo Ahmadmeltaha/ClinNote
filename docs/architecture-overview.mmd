@@ -1,0 +1,11 @@
+flowchart LR
+  FE["Frontend<br/>Flutter"]
+  FE --> API
+  API["API<br/>Hono"]
+  API --> g_root["root"]
+  g_root --> g_root_0["GET /"]
+  g_root --> g_root_1["POST /"]
+  g_root --> g_root_2["GET /:id"]
+  API --> SVC["Services"]
+  SVC --> DB[("Database<br/>PostgreSQL")]
+  DB --> TABLES["1 tables: cars"]

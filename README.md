@@ -1,141 +1,102 @@
-# ClinNote
+# Car Dealership
 
-**AI-powered clinical data integration platform.** Doctors enter patient data (notes, labs, vitals), the system runs it through a multimodal AI pipeline, and produces a structured clinical dashboard with mortality risk scores, prioritized alerts, and an AI-generated summary.
-
-Built as the Spring 2025 capstone project at **Al-Hussein Technical University** (Computer Science / AI & Data Science).
-
----
-
-## Team
-
-| Name | Role |
-|---|---|
-| **Ahmad Jaber** | AI pipeline, FastAPI server, ML model |
-| **Daliah Qadri** | Anomaly detection, data preprocessing |
-| **Ahmad Meltaha** | Web application (frontend + backend), database, deployment |
-
-Supervisor: **Dr. Rami Al Ouran**
-
----
-
-## Repository Layout
-
-This is a mono-repo with two sibling projects:
-
-```
-ClinNote/
-├── CliNote-Web/clinote-web/    →  Web application (Next.js + Prisma + Supabase)
-└── ClinNote-AI/ClinNote/       →  AI pipeline (FastAPI + PyTorch + Phi-3.5-mini)
-```
-
-Each subproject has its own README with details:
-
-- **Web app:** [`CliNote-Web/clinote-web/README.md`](./CliNote-Web/clinote-web/README.md)
-- **AI pipeline:** [`ClinNote-AI/ClinNote/README.md`](./ClinNote-AI/ClinNote/README.md) and [`ClinNote-AI/ClinNote/api/README_API.md`](./ClinNote-AI/ClinNote/api/README_API.md)
-
----
+A web application for browsing and exploring a dealership's vehicle inventory. Customers can filter and sort available cars, view detailed listings with photo galleries and specifications, and take actions such as booking test drives or sending inquiries.
 
 ## Tech Stack
 
-### Web Application
+- **Language:** TypeScript
+- **Frontend:** React (with React Router, Tailwind CSS)
+- **Backend:** Hono
+- **Database:** PostgreSQL (managed via Drizzle ORM)
+- **Validation:** Zod
 
-| Layer | Technology |
-|---|---|
-| Framework | Next.js 16 (App Router) + React 19 |
-| Language | TypeScript (strict mode) |
-| Styling | Tailwind CSS v4 + class-based dark mode |
-| Database | Supabase Postgres |
-| ORM | Prisma |
-| Authentication | NextAuth.js (Credentials provider, JWT sessions) |
-| Forms | React Hook Form + Zod |
-| Charts | Recharts |
-
-### AI Pipeline
-
-| Layer | Technology |
-|---|---|
-| Web framework | FastAPI |
-| ML framework | PyTorch |
-| NLP model | Bio_ClinicalBERT |
-| LLM | Phi-3.5-mini-instruct |
-| Architecture | DisentangledTransformer (custom multimodal fusion) |
-| PDF parsing | pdfplumber |
-
----
-
-## How It Works
-
-The system supports three clinical workflows:
-
-1. **View an existing patient** — load a pre-generated dashboard from disk (~2 s)
-2. **Update a patient** — submit new notes, vitals, or lab PDFs → AI pipeline re-runs → returns a refreshed dashboard with a risk-change diff (~8–15 s)
-3. **Register a new patient** — full pipeline runs from scratch and assigns a new admission ID
-
-The web app communicates with the AI pipeline through a REST API (`/api/patient/{hadm_id}`, `/api/patient/new`, `/api/patient/{hadm_id}/update`, `/api/parse-pdf`). The web app also maintains its own Supabase database with all 568 cohort patients pre-imported, so browsing and searching work even when the AI server is offline.
-
----
-
-## Local Setup
-
-### Prerequisites
-
-- **Node.js** 20+ (for the web app)
-- **Python** 3.11+ (for the AI pipeline)
-- **PostgreSQL** access via Supabase (or any Postgres instance) for the web app
-- ~8 GB free RAM (Phi-3.5-mini loads ~7 GB)
-
-### Web app
+## Getting Started
 
 ```bash
-cd CliNote-Web/clinote-web
+# Install dependencies
 npm install
-cp .env.example .env.local   # fill in DATABASE_URL, NEXTAUTH_SECRET, etc.
-npx prisma generate
-npx prisma migrate deploy
+
+# Run database migrations
+npx drizzle-kit migrate
+
+# Start the development server
 npm run dev
 ```
 
-The web app starts on http://localhost:3000.
+## Features
 
-### AI server
+- **Car Catalog:** Browse, filter, and sort the vehicle inventory with pagination support.
+- **Car Detail Page:** View a comprehensive detail page for any single vehicle. The page renders a responsive photo gallery (swipeable on mobile, thumbnail-based on desktop), key specifications (make, model, year, mileage, fuel, transmission, color), pricing, and a full description. Sold vehicles are clearly marked with a "Sold" badge overlay and disabled action buttons, while still remaining accessible via direct URL to preserve shared links. A "Similar Cars" row at the bottom surfaces related vehicles based on make or body type.
 
-```bash
-cd ClinNote-AI/ClinNote
-python -m venv venv
-venv\Scripts\activate                       # Windows
-# or: source venv/bin/activate              # macOS / Linux
-pip install -r requirements.txt
+## API Endpoints
 
-# Start the FastAPI server
-python -m uvicorn api.app:app --host 127.0.0.1 --port 5000
+| Method | Path | Description |
+| :--- | :--- | :--- |
+| `GET` | `/api/cars` | List cars with filtering, sorting, and pagination. |
+| `POST` | `/api/cars` | Create a new car listing. |
+| `GET` | `/api/cars/:id` | Fetch full car details including photos, specs, and similar cars. |
+
+### `GET /api/cars/:id`
+
+Fetches the complete detail for a single vehicle, including its photo gallery, specifications, pricing, description, availability status, and a list of similar cars.
+
+**Path Parameters:**
+
+| Name | Type | Description |
+| :--- | :--- | :--- |
+| `id` | `string` (UUID) | The unique identifier of the car. |
+
+**Success Response (`200`):**
+
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "make": "Toyota",
+  "model": "Camry",
+  "year": 2023,
+  "mileage": 15000,
+  "fuel": "Gasoline",
+  "transmission": "Automatic",
+  "color": "Silver",
+  "bodyType": "sedan",
+  "price": 28500,
+  "description": "Well-maintained sedan with low mileage.",
+  "photos": [
+    { "url": "https://example.com/photo1.jpg", "altText": "Front view" }
+  ],
+  "status": "available",
+  "similarCars": [
+    {
+      "id": "660e8400-e29b-41d4-a716-446655440001",
+      "make": "Honda",
+      "model": "Accord",
+      "year": 2022,
+      "price": 26000,
+      "mainPhotoUrl": "https://example.com/similar1.jpg"
+    }
+  ]
+}
 ```
 
-The AI server starts on http://127.0.0.1:5000. **Use `127.0.0.1`, not `localhost`** — on Windows, Node's `fetch` resolves `localhost` to IPv6 but uvicorn binds IPv4 only.
+**Error Responses:**
 
-### Wiring them together
+| Status | Description |
+| :--- | :--- |
+| `400` | Invalid car ID (malformed UUID). |
+| `404` | Car not found. |
 
-In the web app's `.env.local`, set:
+## Project Structure
 
-```env
-AI_PIPELINE_URL=http://127.0.0.1:5000
 ```
-
-The web app auto-detects whether the AI server is up. If it isn't, it falls back to a mock response so the UI never crashes.
-
----
-
-## Data Handling
-
-The system was trained and evaluated on **MIMIC-IV** (Medical Information Mart for Intensive Care IV), a de-identified clinical database accessed through PhysioNet under an approved Data Use Agreement.
-
-**Per the PhysioNet DUA, raw MIMIC-IV CSVs are NOT included in this repository.** Anyone running the AI pipeline locally needs their own PhysioNet credentials and a local copy of the data.
-
-The repository also excludes all AI-generated per-patient outputs (summaries, features, model checkpoints) for the same reason.
-
----
-
-## License
-
-This project is part of an academic capstone and is shared for educational and review purposes. The AI pipeline (`ClinNote-AI/`) is the work of Ahmad Jaber and Daliah Qadri. The web application (`CliNote-Web/`) is the work of Ahmad Meltaha.
-
-External components keep their original licenses (Bio_ClinicalBERT, Phi-3.5-mini, Next.js, etc.).
+src/
+├── api/
+│   ├── routes/         # Hono route handlers
+│   ├── services/       # Business logic and database queries
+│   └── validators/     # Zod schemas for request/response validation
+├── db/
+│   └── schema.ts       # Drizzle ORM table definitions
+└── frontend/
+    ├── components/     # Reusable React components
+    ├── hooks/          # Custom React hooks
+    └── pages/          # Route-level page components
+```

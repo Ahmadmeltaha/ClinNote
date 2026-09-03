@@ -1,0 +1,196 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Car Dealership API",
+    "version": "1.0.0",
+    "description": "API for browsing and viewing vehicle inventory."
+  },
+  "paths": {
+    "/api/cars/{id}": {
+      "get": {
+        "summary": "Get car detail",
+        "description": "Fetches full car details including photos, specifications, pricing, description, and a list of similar cars.",
+        "operationId": "getCarDetail",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "The unique identifier (UUID) of the car.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Car detail with similar cars.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CarDetailResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid car ID (e.g. malformed UUID).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBadRequest"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Car not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorNotFound"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CarPhoto": {
+        "type": "object",
+        "required": ["url", "altText"],
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "altText": {
+            "type": "string"
+          }
+        }
+      },
+      "SimilarCar": {
+        "type": "object",
+        "required": ["id", "make", "model", "year", "price", "mainPhotoUrl"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "make": {
+            "type": "string"
+          },
+          "model": {
+            "type": "string"
+          },
+          "year": {
+            "type": "integer"
+          },
+          "price": {
+            "type": "number"
+          },
+          "mainPhotoUrl": {
+            "type": "string",
+            "format": "uri"
+          }
+        }
+      },
+      "CarDetailResponse": {
+        "type": "object",
+        "required": [
+          "id",
+          "make",
+          "model",
+          "year",
+          "mileage",
+          "fuel",
+          "transmission",
+          "color",
+          "bodyType",
+          "price",
+          "description",
+          "photos",
+          "status",
+          "similarCars"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "make": {
+            "type": "string"
+          },
+          "model": {
+            "type": "string"
+          },
+          "year": {
+            "type": "integer"
+          },
+          "mileage": {
+            "type": "integer"
+          },
+          "fuel": {
+            "type": "string"
+          },
+          "transmission": {
+            "type": "string"
+          },
+          "color": {
+            "type": "string"
+          },
+          "bodyType": {
+            "type": "string"
+          },
+          "price": {
+            "type": "number"
+          },
+          "description": {
+            "type": "string"
+          },
+          "photos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CarPhoto"
+            }
+          },
+          "status": {
+            "type": "string",
+            "enum": ["available", "sold"]
+          },
+          "similarCars": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SimilarCar"
+            }
+          }
+        }
+      },
+      "ErrorBadRequest": {
+        "type": "object",
+        "required": ["error"],
+        "properties": {
+          "error": {
+            "type": "string"
+          },
+          "details": {
+            "type": "object"
+          }
+        }
+      },
+      "ErrorNotFound": {
+        "type": "object",
+        "required": ["error"],
+        "properties": {
+          "error": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
