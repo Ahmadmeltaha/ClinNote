@@ -1,141 +1,111 @@
-# ClinNote
+# Chat
 
-**AI-powered clinical data integration platform.** Doctors enter patient data (notes, labs, vitals), the system runs it through a multimodal AI pipeline, and produces a structured clinical dashboard with mortality risk scores, prioritized alerts, and an AI-generated summary.
-
-Built as the Spring 2025 capstone project at **Al-Hussein Technical University** (Computer Science / AI & Data Science).
-
----
-
-## Team
-
-| Name | Role |
-|---|---|
-| **Ahmad Jaber** | AI pipeline, FastAPI server, ML model |
-| **Daliah Qadri** | Anomaly detection, data preprocessing |
-| **Ahmad Meltaha** | Web application (frontend + backend), database, deployment |
-
-Supervisor: **Dr. Rami Al Ouran**
-
----
-
-## Repository Layout
-
-This is a mono-repo with two sibling projects:
-
-```
-ClinNote/
-├── CliNote-Web/clinote-web/    →  Web application (Next.js + Prisma + Supabase)
-└── ClinNote-AI/ClinNote/       →  AI pipeline (FastAPI + PyTorch + Phi-3.5-mini)
-```
-
-Each subproject has its own README with details:
-
-- **Web app:** [`CliNote-Web/clinote-web/README.md`](./CliNote-Web/clinote-web/README.md)
-- **AI pipeline:** [`ClinNote-AI/ClinNote/README.md`](./ClinNote-AI/ClinNote/README.md) and [`ClinNote-AI/ClinNote/api/README_API.md`](./ClinNote-AI/ClinNote/api/README_API.md)
-
----
+A real-time chat application built with Next.js, Hono, and PostgreSQL. The initial feature provides the foundational identity layer — email/password authentication and user profile management — that downstream features (messaging, presence, etc.) depend on.
 
 ## Tech Stack
 
-### Web Application
-
 | Layer | Technology |
-|---|---|
-| Framework | Next.js 16 (App Router) + React 19 |
-| Language | TypeScript (strict mode) |
-| Styling | Tailwind CSS v4 + class-based dark mode |
-| Database | Supabase Postgres |
-| ORM | Prisma |
-| Authentication | NextAuth.js (Credentials provider, JWT sessions) |
-| Forms | React Hook Form + Zod |
-| Charts | Recharts |
+|-------|-----------|
+| Language | TypeScript |
+| Frontend | Next.js (React) |
+| Backend | Hono |
+| Database | PostgreSQL |
+| ORM | Drizzle ORM |
+| Validation | Zod |
+| Auth | JWT (HS256 via `hono/jwt`) |
+| Password Hashing | Node `crypto.scrypt` |
+| State Management | Zustand (with `persist` middleware) |
 
-### AI Pipeline
-
-| Layer | Technology |
-|---|---|
-| Web framework | FastAPI |
-| ML framework | PyTorch |
-| NLP model | Bio_ClinicalBERT |
-| LLM | Phi-3.5-mini-instruct |
-| Architecture | DisentangledTransformer (custom multimodal fusion) |
-| PDF parsing | pdfplumber |
-
----
-
-## How It Works
-
-The system supports three clinical workflows:
-
-1. **View an existing patient** — load a pre-generated dashboard from disk (~2 s)
-2. **Update a patient** — submit new notes, vitals, or lab PDFs → AI pipeline re-runs → returns a refreshed dashboard with a risk-change diff (~8–15 s)
-3. **Register a new patient** — full pipeline runs from scratch and assigns a new admission ID
-
-The web app communicates with the AI pipeline through a REST API (`/api/patient/{hadm_id}`, `/api/patient/new`, `/api/patient/{hadm_id}/update`, `/api/parse-pdf`). The web app also maintains its own Supabase database with all 568 cohort patients pre-imported, so browsing and searching work even when the AI server is offline.
-
----
-
-## Local Setup
+## Getting Started
 
 ### Prerequisites
 
-- **Node.js** 20+ (for the web app)
-- **Python** 3.11+ (for the AI pipeline)
-- **PostgreSQL** access via Supabase (or any Postgres instance) for the web app
-- ~8 GB free RAM (Phi-3.5-mini loads ~7 GB)
+- Node.js ≥ 18
+- PostgreSQL ≥ 15
 
-### Web app
+### Environment Variables
+
+Create a `.env` file (or set the variables in your shell):
 
 ```bash
-cd CliNote-Web/clinote-web
+DATABASE_URL=postgres://user:password@localhost:5432/chat
+JWT_SECRET=your-secret-key
+NEXT_PUBLIC_API_URL=http://localhost:3001
+```
+
+### Installation
+
+```bash
 npm install
-cp .env.example .env.local   # fill in DATABASE_URL, NEXTAUTH_SECRET, etc.
-npx prisma generate
-npx prisma migrate deploy
-npm run dev
 ```
 
-The web app starts on http://localhost:3000.
+### Database Setup
 
-### AI server
+The users table is created automatically on first run via `initializeDatabase()`. You can also apply the migration manually:
 
 ```bash
-cd ClinNote-AI/ClinNote
-python -m venv venv
-venv\Scripts\activate                       # Windows
-# or: source venv/bin/activate              # macOS / Linux
-pip install -r requirements.txt
-
-# Start the FastAPI server
-python -m uvicorn api.app:app --host 127.0.0.1 --port 5000
+psql $DATABASE_URL -f src/db/migrations/0001_create_users.sql
 ```
 
-The AI server starts on http://127.0.0.1:5000. **Use `127.0.0.1`, not `localhost`** — on Windows, Node's `fetch` resolves `localhost` to IPv6 but uvicorn binds IPv4 only.
+### Running the App
 
-### Wiring them together
+```bash
+# Start the Next.js frontend (default port 3000)
+npm run dev
 
-In the web app's `.env.local`, set:
-
-```env
-AI_PIPELINE_URL=http://127.0.0.1:5000
+# Start the Hono API server (default port 3001)
+npm run dev:api
 ```
 
-The web app auto-detects whether the AI server is up. If it isn't, it falls back to a mock response so the UI never crashes.
+## Features
 
----
+### User Accounts & Profiles
 
-## Data Handling
+This feature provides email/password registration and login, JWT-based session management, and a profile settings view where users can view and update their display name. Each user is assigned a deterministic, initials-based avatar with a color derived from their user ID, ensuring a consistent visual identity across sessions and devices.
 
-The system was trained and evaluated on **MIMIC-IV** (Medical Information Mart for Intensive Care IV), a de-identified clinical database accessed through PhysioNet under an approved Data Use Agreement.
+**Capabilities:**
+- Sign up with email, password (≥ 8 characters), and display name (1–50 characters)
+- Log in / log out with JWT bearer tokens
+- View profile (display name, email, avatar)
+- Update display name
+- Automatic redirect to login when the session expires (401 handling)
 
-**Per the PhysioNet DUA, raw MIMIC-IV CSVs are NOT included in this repository.** Anyone running the AI pipeline locally needs their own PhysioNet credentials and a local copy of the data.
+## API Endpoints
 
-The repository also excludes all AI-generated per-patient outputs (summaries, features, model checkpoints) for the same reason.
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `POST` | `/api/auth/signup` | No | Register a new account; returns user + JWT |
+| `POST` | `/api/auth/login` | No | Authenticate; returns user + JWT |
+| `POST` | `/api/auth/logout` | Yes | Terminate the current session |
+| `GET` | `/api/users/me` | Yes | Get the authenticated user's profile |
+| `PATCH` | `/api/users/me` | Yes | Update display name |
 
----
+### Authentication
+
+Protected endpoints require a `Bearer <token>` header. Tokens are issued by the signup and login endpoints and must be stored client-side (the app uses `localStorage`).
+
+### Error Responses
+
+| Status | Meaning |
+|--------|---------|
+| `401` | Unauthorized — missing/invalid token or bad credentials |
+| `409` | Conflict — email already registered |
+| `422` | Validation error — malformed request body |
+| `404` | Not found — user does not exist |
+
+## Project Structure
+
+```
+src/
+├── app/                  # Next.js pages (login, signup, profile)
+├── components/           # Shared UI components (Avatar)
+├── db/                   # Drizzle schema, client, and migrations
+├── lib/                  # Auth utilities, avatar utilities, API client, Zustand store
+├── middleware/            # Hono auth middleware
+├── routes/               # Hono route handlers (auth, users)
+└── views/                # Page re-exports
+```
 
 ## License
 
-This project is part of an academic capstone and is shared for educational and review purposes. The AI pipeline (`ClinNote-AI/`) is the work of Ahmad Jaber and Daliah Qadri. The web application (`CliNote-Web/`) is the work of Ahmad Meltaha.
-
-External components keep their original licenses (Bio_ClinicalBERT, Phi-3.5-mini, Next.js, etc.).
+Private — internal project.

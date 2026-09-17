@@ -1,0 +1,290 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Chat – User Accounts & Profiles API",
+    "version": "1.0.0",
+    "description": "Authentication and profile management endpoints for the Chat application."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3001",
+      "description": "Local development server"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT token returned by /api/auth/signup and /api/auth/login."
+      }
+    },
+    "schemas": {
+      "User": {
+        "type": "object",
+        "required": ["id", "email", "displayName", "avatarColor"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "email": { "type": "string", "format": "email" },
+          "displayName": { "type": "string", "minLength": 1, "maxLength": 50 },
+          "avatarColor": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$", "description": "Hex color code for the user's avatar background." }
+        }
+      },
+      "AuthResponse": {
+        "type": "object",
+        "required": ["user", "token"],
+        "properties": {
+          "user": { "$ref": "#/components/schemas/User" },
+          "token": { "type": "string", "description": "JWT used for authenticating subsequent requests." }
+        }
+      },
+      "SignupRequest": {
+        "type": "object",
+        "required": ["email", "password", "displayName"],
+        "properties": {
+          "email": { "type": "string", "format": "email" },
+          "password": { "type": "string", "minLength": 8, "description": "Must be at least 8 characters." },
+          "displayName": { "type": "string", "minLength": 1, "maxLength": 50 }
+        }
+      },
+      "LoginRequest": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+          "email": { "type": "string", "format": "email" },
+          "password": { "type": "string" }
+        }
+      },
+      "UpdateProfileRequest": {
+        "type": "object",
+        "required": ["displayName"],
+        "properties": {
+          "displayName": { "type": "string", "minLength": 1, "maxLength": 50 }
+        }
+      },
+      "ProfileResponse": {
+        "allOf": [
+          { "$ref": "#/components/schemas/User" },
+          {
+            "type": "object",
+            "required": ["createdAt"],
+            "properties": {
+              "createdAt": { "type": "string", "format": "date-time" }
+            }
+          }
+        ]
+      },
+      "UpdatedProfileResponse": {
+        "allOf": [
+          { "$ref": "#/components/schemas/User" },
+          {
+            "type": "object",
+            "required": ["updatedAt"],
+            "properties": {
+              "updatedAt": { "type": "string", "format": "date-time" }
+            }
+          }
+        ]
+      },
+      "LogoutResponse": {
+        "type": "object",
+        "required": ["success"],
+        "properties": {
+          "success": { "type": "boolean" }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "required": ["error"],
+        "properties": {
+          "error": { "type": "string" }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/api/auth/signup": {
+      "post": {
+        "operationId": "signup",
+        "summary": "Register a new user account",
+        "tags": ["Auth"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SignupRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Account created and user logged in.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AuthResponse" }
+              }
+            }
+          },
+          "409": {
+            "description": "An account with this email already exists.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error (invalid email, short password, missing fields).",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "operationId": "login",
+        "summary": "Authenticate an existing user",
+        "tags": ["Auth"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/LoginRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authentication successful.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AuthResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid email or password.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error (invalid email format).",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "operationId": "logout",
+        "summary": "Terminate the current session",
+        "tags": ["Auth"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Session terminated successfully.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/LogoutResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized – missing or invalid bearer token.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/me": {
+      "get": {
+        "operationId": "getCurrentProfile",
+        "summary": "Get the authenticated user's profile",
+        "tags": ["Users"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Current user profile.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ProfileResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized – missing or invalid bearer token.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "updateProfile",
+        "summary": "Update the authenticated user's display name",
+        "tags": ["Users"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateProfileRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Profile updated successfully.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UpdatedProfileResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized – missing or invalid bearer token.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error (display name too long or empty).",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
