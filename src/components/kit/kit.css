@@ -1,0 +1,570 @@
+/*
+ * The starter kit's styles. Only the theme's tokens: every coloured ground carries its own --color-on-* text colour,
+ * nothing is faded with opacity, long words wrap, and nothing is wider than its column. In the components layer, so a
+ * utility class written on a part still wins.
+ */
+@import "./font.css";
+
+/*
+ * os-cla inbox 493: one type scale, one loaded font for body and headings (the theme's tokens; Inter ships in
+ * font.css), and a light elevation that turns into a border in the dark scheme.
+ */
+@layer base {
+  :root {
+    --kit-text-title: clamp(1.5rem, 1.2rem + 1.2vw, 1.875rem);
+    --kit-text-section: 1.25rem;
+    --kit-text-body: 1rem;
+    --kit-text-small: 0.875rem;
+    /* The theme's own soft shadow (os-cla inbox 495), a border in the dark scheme below. */
+    --kit-shadow: var(--shadow-card);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --kit-shadow: 0 0 0 1px var(--color-border-strong);
+    }
+  }
+  body {
+    font-family: var(--font-body);
+    font-size: var(--kit-text-body);
+  }
+  h1, h2, h3 {
+    font-family: var(--font-heading, var(--font-body));
+  }
+}
+
+@layer components {
+  .kit-dialog,
+  .kit-button,
+  .kit-alert,
+  .kit-status,
+  .kit-field,
+  .kit-table,
+  .kit-page-title,
+  .kit-card,
+  .kit-empty,
+  .kit-list,
+  .kit-badge,
+  .kit-nav {
+    overflow-wrap: anywhere;
+    min-width: 0;
+  }
+
+  /* A see-through colour behind the dialog, never opacity: the dialog itself stays at full colour. */
+  .kit-dialog-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: grid;
+    place-items: center;
+    padding: 1rem;
+    background: color-mix(in oklab, var(--color-ink) 45%, transparent);
+  }
+  .kit-dialog {
+    width: 100%;
+    max-width: 32rem;
+    max-height: calc(100dvh - 2rem);
+    overflow-y: auto;
+    padding: 1.25rem;
+    border: 1px solid var(--color-border);
+    border-radius: 0.75rem;
+    background: var(--color-surface);
+    color: var(--color-ink);
+    box-shadow: var(--kit-shadow);
+  }
+  .kit-dialog-title {
+    margin: 0 0 0.75rem;
+    font-size: var(--kit-text-section);
+    font-weight: 600;
+    color: var(--color-ink);
+  }
+  .kit-dialog-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-top: 1.25rem;
+  }
+
+  .kit-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    max-width: 100%;
+    padding: 0.6rem 1rem;
+    border: 1px solid transparent;
+    border-radius: 0.6rem;
+    font: inherit;
+    font-weight: 600;
+    line-height: 1.3;
+    text-align: center;
+    white-space: normal;
+    cursor: pointer;
+  }
+  .kit-button-primary {
+    background: var(--color-accent);
+    color: var(--color-on-accent);
+  }
+  .kit-button-primary:hover {
+    background: var(--color-accent-hover);
+    color: var(--color-on-accent);
+  }
+  .kit-button-secondary {
+    border-color: var(--color-border-strong);
+    background: var(--color-surface);
+    color: var(--color-ink);
+  }
+  .kit-button-secondary:hover {
+    background: var(--color-surface-sunk);
+    color: var(--color-ink);
+  }
+  .kit-button-danger {
+    background: var(--color-danger);
+    color: var(--color-on-danger);
+  }
+  .kit-button:focus-visible {
+    outline: 3px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+  /* Pressed: pushed down a pixel, on the hover colour, so the pressed fill keeps its readable on-colour. */
+  .kit-button:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+  .kit-button-primary:active:not(:disabled) {
+    background: var(--color-accent-hover);
+    color: var(--color-on-accent);
+  }
+  .kit-button-secondary:active:not(:disabled) {
+    background: var(--color-surface-sunk);
+    color: var(--color-ink);
+  }
+  /* Disabled reads as disabled by its own colours, never by fading. */
+  .kit-button:disabled {
+    border-color: var(--color-border);
+    background: var(--color-surface-sunk);
+    color: var(--color-ink-soft);
+    cursor: not-allowed;
+  }
+  .kit-button-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  /* The strong colour is the border only; the text is ink on the soft ground. */
+  .kit-alert {
+    margin-block: 0.75rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--color-border-strong);
+    border-left-width: 4px;
+    border-radius: 0.6rem;
+    color: var(--color-ink);
+  }
+  .kit-alert-info {
+    border-color: var(--color-accent);
+    background: var(--color-accent-soft);
+  }
+  .kit-alert-success {
+    border-color: var(--color-success);
+    background: var(--color-success-soft);
+  }
+  .kit-alert-warning {
+    border-color: var(--color-warn);
+    background: var(--color-warn-soft);
+  }
+  .kit-alert-danger {
+    border-color: var(--color-danger);
+    background: var(--color-danger-soft);
+  }
+  .kit-alert-title {
+    margin: 0;
+    font-weight: 600;
+  }
+
+  /* In the page flow, next to what it is about: never laid over other content. */
+  .kit-status {
+    margin-block: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    background: var(--color-surface-sunk);
+    color: var(--color-ink);
+  }
+
+  /* A readable width: a field never stretches across a wide page. */
+  .kit-field {
+    display: block;
+    margin-block: 0.75rem;
+    max-width: 32rem;
+  }
+  .kit-field input {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 0.55rem 0.75rem;
+    border: 1px solid var(--color-border-strong);
+    border-radius: 0.5rem;
+    background: var(--color-surface);
+    color: var(--color-ink);
+    font: inherit;
+  }
+  .kit-field input:hover {
+    border-color: var(--color-ink-soft);
+  }
+  .kit-field input:focus-visible {
+    outline: 3px solid var(--color-accent);
+    outline-offset: 1px;
+  }
+  .kit-field-label {
+    display: block;
+    margin: 0 0 0.35rem;
+    font-weight: 600;
+    color: var(--color-ink);
+  }
+  .kit-field-help {
+    margin: 0.35rem 0 0;
+    font-size: var(--kit-text-small);
+    color: var(--color-ink-soft);
+  }
+  /* The error is ink with a danger mark, so it reads at full contrast on any ground. */
+  .kit-field-error {
+    margin: 0.35rem 0 0;
+    padding-left: 0.5rem;
+    border-left: 3px solid var(--color-danger);
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-ink);
+  }
+  .kit-field [aria-invalid="true"] {
+    border-color: var(--color-danger);
+  }
+
+  /* Amendment 121: when its columns cannot fit, the table scrolls inside its own box, never the page. */
+  .kit-table-wrap {
+    container-type: inline-size;
+    width: 100%;
+    overflow-x: auto;
+  }
+  .kit-table {
+    width: 100%;
+    border-collapse: collapse;
+    color: var(--color-ink);
+  }
+  .kit-table-caption {
+    padding-bottom: 0.5rem;
+    font-weight: 600;
+    text-align: start;
+  }
+  .kit-table th,
+  .kit-table td {
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid var(--color-border);
+    text-align: start;
+    vertical-align: top;
+  }
+  /* Amendment 121: a header keeps its words whole; a long word in a cell no longer squeezes it to "Req" / "uested". */
+  .kit-table th {
+    background: var(--color-surface-sunk);
+    font-weight: 600;
+    overflow-wrap: normal;
+  }
+  .kit-table tbody tr:hover {
+    background: var(--color-surface-sunk);
+  }
+  /* Narrow: each row becomes a block of label and value lines, so the table never scrolls sideways. */
+  @container (max-width: 640px) {
+    .kit-table thead {
+      display: none;
+    }
+    .kit-table tbody,
+    .kit-table tr,
+    .kit-table td {
+      display: block;
+      width: 100%;
+    }
+    .kit-table tr {
+      padding-block: 0.5rem;
+      border-bottom: 1px solid var(--color-border);
+    }
+    .kit-table td {
+      padding: 0.25rem 0;
+      border: 0;
+    }
+    .kit-table td::before {
+      content: attr(data-label);
+      display: block;
+      font-weight: 600;
+      color: var(--color-ink-soft);
+    }
+  }
+
+  /* Amendment 121: the header. The name may shrink and wraps, never cut; the links wrap, and go under it when narrow. */
+  .kit-header {
+    container-type: inline-size;
+    border-bottom: 1px solid var(--color-border);
+  }
+  .kit-header-bar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.5rem 1.5rem;
+    padding: 0.75rem 1rem;
+  }
+  .kit-header-name {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--color-ink);
+    text-decoration: none;
+  }
+  .kit-header-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 1rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .kit-header-links a {
+    overflow-wrap: anywhere;
+    color: var(--color-ink);
+  }
+  .kit-header-links a[aria-current="page"] {
+    box-shadow: inset 0 -2px 0 var(--color-accent);
+  }
+  @container (max-width: 480px) {
+    .kit-header-bar {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+}
+
+/* os-cla inbox 493: a page title, a card, an empty state and a list, on the type scale and the theme's tokens. */
+@layer components {
+  .kit-page-title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 0.75rem 1rem;
+    margin-block: 0 1.25rem;
+  }
+  .kit-page-title-text {
+    min-width: 0;
+  }
+  .kit-page-title-heading {
+    margin: 0;
+    font-size: var(--kit-text-title);
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    color: var(--color-ink);
+  }
+  .kit-page-title-description {
+    margin: 0.35rem 0 0;
+    font-size: var(--kit-text-body);
+    color: var(--color-ink-soft);
+  }
+  .kit-page-title-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .kit-card {
+    margin-block: 0 var(--space-4);
+    padding: var(--space-5);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+    background: var(--color-surface);
+    color: var(--color-ink);
+    box-shadow: var(--kit-shadow);
+  }
+  .kit-card-title {
+    margin: 0 0 0.75rem;
+    font-size: var(--kit-text-section);
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--color-ink);
+  }
+  .kit-card-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+
+  .kit-empty {
+    padding: 2rem 1.25rem;
+    border: 1px dashed var(--color-border-strong);
+    border-radius: 0.75rem;
+    background: var(--color-surface);
+    color: var(--color-ink);
+    text-align: center;
+  }
+  /* Centred as blocks too: a theme may cap a paragraph's width. */
+  .kit-empty-title {
+    margin: 0 auto;
+    font-size: var(--kit-text-section);
+    font-weight: 600;
+  }
+  .kit-empty-text {
+    margin: 0.35rem auto 0;
+    font-size: var(--kit-text-small);
+    color: var(--color-ink-soft);
+  }
+  .kit-empty-action {
+    margin-top: 1rem;
+  }
+
+  .kit-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border: 1px solid var(--color-border);
+    border-radius: 0.75rem;
+    background: var(--color-surface);
+    color: var(--color-ink);
+  }
+  .kit-list-item {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem 1rem;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+  .kit-list-item:last-child {
+    border-bottom: 0;
+  }
+  .kit-list-item:hover {
+    background: var(--color-surface-sunk);
+  }
+  .kit-list-item:focus-within {
+    outline: 3px solid var(--color-accent);
+    outline-offset: -3px;
+  }
+  .kit-list-item-main {
+    min-width: 0;
+  }
+  .kit-list-item-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+}
+
+/* os-cla inbox 495: a badge and the app's navigation bar, on the theme's tokens and scales. */
+@layer components {
+  .kit-badge {
+    display: inline-flex;
+    align-items: center;
+    max-width: 100%;
+    padding: 0.125rem var(--space-2);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-full);
+    font-size: var(--kit-text-small);
+    font-weight: 600;
+    line-height: 1.5;
+  }
+  .kit-badge-neutral {
+    background: var(--color-surface-sunk);
+    color: var(--color-ink);
+  }
+  .kit-badge-accent {
+    border-color: var(--color-accent);
+    background: var(--color-accent-soft);
+    color: var(--color-ink);
+  }
+  .kit-badge-success {
+    border-color: var(--color-success);
+    background: var(--color-success-soft);
+    color: var(--color-ink);
+  }
+  .kit-badge-warning {
+    border-color: var(--color-warn);
+    background: var(--color-warn-soft);
+    color: var(--color-ink);
+  }
+  .kit-badge-danger {
+    border-color: var(--color-danger);
+    background: var(--color-danger-soft);
+    color: var(--color-ink);
+  }
+
+  .kit-nav {
+    margin-block-end: var(--space-6);
+    background: var(--color-surface);
+    color: var(--color-ink);
+  }
+  .kit-nav-inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2) var(--space-6);
+    max-width: 72rem;
+    margin-inline: auto;
+    padding: var(--space-3) var(--space-4);
+  }
+  .kit-nav-name {
+    font-size: var(--kit-text-section);
+    font-weight: 700;
+    color: var(--color-ink);
+  }
+  .kit-nav-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .kit-nav-link {
+    display: inline-block;
+    padding: var(--space-2) var(--space-3);
+    border-radius: 0.5rem;
+    color: var(--color-ink);
+    font-weight: 500;
+    text-decoration: none;
+  }
+  .kit-nav-link:hover {
+    background: var(--color-surface-sunk);
+    color: var(--color-ink);
+  }
+  .kit-nav-link:focus-visible {
+    outline: 3px solid var(--color-accent);
+    outline-offset: 1px;
+  }
+  .kit-nav-link[aria-current="page"] {
+    background: var(--color-accent-soft);
+    color: var(--color-ink);
+    font-weight: 600;
+  }
+}
+
+/*
+ * os-cla inbox 499, 501: a heading never breaks a word (the screen check's label-cut fails one that does): it wraps
+ * only between words. Inside a card with its own title, a table's caption stays for screen readers only, so the
+ * title is not shown twice.
+ */
+@layer components {
+  .kit-dialog-title,
+  .kit-card-title,
+  .kit-page-title-heading {
+    overflow-wrap: normal;
+    word-break: normal;
+    hyphens: manual;
+  }
+  .kit-card:has(> .kit-card-title) .kit-table-caption {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+}
